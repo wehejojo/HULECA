@@ -104,10 +104,15 @@ $(function () {
         $("body").append(canvas);
     };
 
+    var alertTimeout;
+    var isAlertTriggered = false;
+
     const renderPredictions = function (predictions) {
         var scale = 1;
 
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        let cigaretteDetected = false;
 
         predictions.forEach(function (prediction) {
             const x = prediction.bbox.x;
@@ -115,6 +120,9 @@ $(function () {
 
             const width = prediction.bbox.width;
             const height = prediction.bbox.height;
+
+            if(prediction.class.toLowerCase() === "cigarette")
+                cigaretteDetected = true;
 
             // Draw the bounding box.
             ctx.strokeStyle = prediction.color;
@@ -155,6 +163,17 @@ $(function () {
                 (y - height / 2) / scale + 1
             );
         });
+
+        if (cigaretteDetected && !isAlertTriggered){
+            isAlertTriggered = true;
+            alertTimeout = setTimeout(() => {
+                alert("Cigarette Detected! Enforcers have been informed");
+                isAlertTriggered = false;
+            }, 3000);
+        } else if (!cigaretteDetected) {
+            clearTimeout(alertTimeout);
+            isAlertTriggered = false;
+        }
     };
 
     var prevTime;
