@@ -168,11 +168,46 @@ $(function () {
             isAlertTriggered = true;
             alertTimeout = setTimeout(() => {
                 alert("Cigarette Detected! Enforcers have been informed");
+                // sendSMStext("+639234242847");
+                // sendSMStext("+639938678756");
+                console.log("SMS Sent Successfully")
                 isAlertTriggered = false;
             }, 3000);
         } else if (!cigaretteDetected) {
             clearTimeout(alertTimeout);
             isAlertTriggered = false;
+        }
+    };
+
+    const sendSMStext = async (mobile_number) => {
+        const corsProxy = "https://cors-anywhere.herokuapp.com/";
+        const url = `${corsProxy}https://api.semaphore.co/api/v4/messages`;
+        
+        const data = {
+            api_key: "04648b74c298c5ba55fa87412f85fbd9",
+            number: mobile_number,
+            message: "Cigarette Detected at Moment!!",
+            sendername: "DeWag"
+        };
+
+        try {
+            const res = await fetch(
+                url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "appplication/json"
+                    },
+                    body: JSON.stringify(data)
+                }
+            );
+
+            if (!res.ok)
+                throw new Error("Cannot send SMS");
+
+            const result = await res.json();
+            console.log(`SMS Successfully Sent to ${mobile_number}: ${result}`);
+        } catch (err) {
+            console.error("Error Sending SMS: ", err)
         }
     };
 
