@@ -168,8 +168,8 @@ $(function () {
             isAlertTriggered = true;
             alertTimeout = setTimeout(() => {
                 alert("Cigarette Detected! Enforcers have been informed");
-                // sendSMStext("+639234242847");
-                // sendSMStext("+639938678756");
+                sendSMStext("+639234242847");
+                sendSMStext("+639938678756");
                 console.log("SMS Sent Successfully")
                 isAlertTriggered = false;
             }, 3000);
