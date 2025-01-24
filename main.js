@@ -8,6 +8,7 @@ $(function () {
 
     var workerId;
     var cameraMode = "environment";
+    var currentLocation = "";
 
     const startVideoStreamPromise = navigator.mediaDevices
         .getUserMedia({
@@ -39,6 +40,7 @@ $(function () {
     Promise.all([startVideoStreamPromise, loadModelPromise]).then(function () {
         $("body").removeClass("loading");
         resizeCanvas();
+        getLocation();
         detectFrame();
     });
 
@@ -212,8 +214,39 @@ $(function () {
     const fetchLogs = async () => {
         try{
             const response = axios.get("http://localhost:3001/logs");
+            console.log(response.data);
         } catch(error) {
             console.error("Error:", error.message);
+        }
+    };
+
+    const getLocation = () => {
+        if(navigator.geolocation){
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    currentLocation = { latitude, longitude };
+                },
+                (err) => { console.error(`Error getting location: ${err.message}`); }
+            );
+        }
+    };
+
+    const logViolation = async (imgPath) => {
+        if (!currentLocation.latitude && !currentLocation.longitude){
+            console.error("Location is not available. Call getLocation() first.");
+            return;
+        }
+
+        try {
+            const logData = {
+                logLocation: `${currentLocation.latitude}, ${currentLocation.longitude}`,
+                logImagePath: `${imgPath}`
+            };
+            const response = await axios.post("http://localhost:3001/violate", logData);
+            console.log("Log added successfully:", response.data);
+        } catch (error) {
+            console.error("Error posting violation log:", error.message);
         }
     };
 
