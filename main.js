@@ -170,6 +170,8 @@ $(function () {
             isAlertTriggered = true;
             alertTimeout = setTimeout(() => {
                 alert("Cigarette Detected! Enforcers have been informed");
+                let number = Math.floor(Math.random() * 10);
+                logViolation(`log-${number}.jpg`);
                 fetchLogs();
                 isAlertTriggered = false;
             }, 3000);
@@ -214,7 +216,6 @@ $(function () {
     const fetchLogs = async () => {
         try{
             const response = axios.get("http://localhost:3001/logs");
-            console.log(response.data);
         } catch(error) {
             console.error("Error:", error.message);
         }

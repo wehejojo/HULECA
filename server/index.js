@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 
 app.get('/logs', (req, res) => {
   const filePath = "./db/HULECA-logs.json";
-
+  
   fs.readFile(filePath, 'utf8', (err, data) => {
     if (err) {
       console.error(`File Read Error: ${err.message}`);
@@ -23,10 +23,10 @@ app.get('/logs', (req, res) => {
         error: "Failed to read the file",
       });
     }
-
+    
     try {
       const logs = JSON.parse(data);
-
+      
       // Add logTime to each log
       const formattedLogs = logs.map((log, index) => {
         console.log(`Log ${index + 1}`);
@@ -39,7 +39,7 @@ app.get('/logs', (req, res) => {
           logTime: moment().format('MMMM Do YYYY, h:mm:ss a')
         };
       });
-
+      
       // Respond with the formatted logs
       res.json(formattedLogs);
     } catch (parseError) {
@@ -50,6 +50,41 @@ app.get('/logs', (req, res) => {
     }
   });
 });
+
+app.get('/numLog', (req, res) => {
+  const filePath = "./db/HULECA-logs.json";
+  
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error(`File Read Error: ${err.message}`);
+      return res.status(500).json({
+        error: "Failed to read the file",
+      });
+    }
+
+    try {
+      // Parse the JSON data
+      const logs = JSON.parse(data);
+
+      // Make sure the data is an array before getting the length
+      if (Array.isArray(logs)) {
+        // Return the length of the array (number of logs)
+        res.json({ numLogs: logs.length });
+      } else {
+        res.status(500).json({
+          error: "The JSON data is not an array",
+        });
+      }
+
+    } catch (parseError) {
+      console.error(`JSON Parse Error: ${parseError.message}`);
+      res.status(500).json({
+        error: "Failed to parse JSON",
+      });
+    }
+  });
+});
+
 
 app.post('/violate', (req, res) => {
   const filePath = "./db/HULECA-logs.json";
@@ -106,6 +141,7 @@ app.post('/violate', (req, res) => {
   });
 });
 
+
 app.listen(PORT, () => {
-  console.log(`Moment is currently momenting on port: ${PORT}`);
+  console.log(`Server is running on port: ${PORT}`);
 });
