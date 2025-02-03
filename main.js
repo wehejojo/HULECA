@@ -8,14 +8,12 @@ $(function () {
 
     var workerId;
     var cameraMode = "environment";
-    var currentLocation = "";
+    var currentLocation = { latitude: null, longitude: null };
 
     const startVideoStreamPromise = navigator.mediaDevices
         .getUserMedia({
             audio: false,
-            video: {
-                facingMode: cameraMode
-            }
+            video: { facingMode: cameraMode }
         })
         .then(function (stream) {
             return new Promise(function (resolve) {
@@ -170,8 +168,7 @@ $(function () {
             isAlertTriggered = true;
             alertTimeout = setTimeout(() => {
                 alert("Cigarette Detected! Enforcers have been informed");
-                let number = Math.floor(Math.random() * 10);
-                logViolation(`log-${number}.jpg`);
+                logViolation();
                 fetchLogs();
                 isAlertTriggered = false;
             }, 3000);
@@ -181,41 +178,10 @@ $(function () {
         }
     };
 
-    // const sendSMStext = async (mobile_number) => {
-    //     const corsProxy = "https://cors-anywhere.herokuapp.com/";
-    //     const url = `${corsProxy}https://api.semaphore.co/api/v4/messages`;
-        
-    //     const data = {
-    //         api_key: "04648b74c298c5ba55fa87412f85fbd9",
-    //         number: mobile_number,
-    //         message: "Cigarette Detected at Moment!!",
-    //         sendername: "DeWag"
-    //     };
-
-    //     try {
-    //         const res = await fetch(
-    //             url, {
-    //                 method: "POST",
-    //                 headers: {
-    //                     "Content-Type": "appplication/json"
-    //                 },
-    //                 body: JSON.stringify(data)
-    //             }
-    //         );
-
-    //         if (!res.ok)
-    //             throw new Error("Cannot send SMS");
-
-    //         const result = await res.json();
-    //         console.log(`SMS Successfully Sent to ${mobile_number}: ${result}`);
-    //     } catch (err) {
-    //         console.error("Error Sending SMS: ", err)
-    //     }
-    // };
-
     const fetchLogs = async () => {
         try{
             const response = axios.get("http://localhost:3001/logs");
+            console.log(`Logs: ${response.data}`);
         } catch(error) {
             console.error("Error:", error.message);
         }
@@ -227,22 +193,44 @@ $(function () {
                 (pos) => {
                     const { latitude, longitude } = pos.coords;
                     currentLocation = { latitude, longitude };
+                    console.log("Current location:", currentLocation);
                 },
-                (err) => { console.error(`Error getting location: ${err.message}`); }
+                (err) => {
+                    console.error(`Error getting location: ${err.message}`);
+                }
             );
         }
     };
 
-    const logViolation = async (imgPath) => {
+    const logViolation = async () => {
         if (!currentLocation.latitude && !currentLocation.longitude){
             console.error("Location is not available. Call getLocation() first.");
             return;
         }
 
+        // Create a canvas for capturing snapshot
+        let snapshotCanvas = document.createElement("canvas");
+        let snapshotCtx = snapshotCanvas.getContext("2d");
+
+        // Set canvas size to match video
+        snapshotCanvas.width = video.videoWidth;
+        snapshotCanvas.height = video.videoHeight;
+
+        // Draw current video frame onto canvas
+        snapshotCtx.drawImage(video, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
+
+        // Convert to base64 image
+        let imageBase64 = snapshotCanvas.toDataURL("image/jpeg");
+
+        // Get current timestamp using Moment.js
+        
+        let timestamp = moment().format('MMMM Do YYYY, h:mm:ss a');
+
         try {
             const logData = {
                 logLocation: `${currentLocation.latitude}, ${currentLocation.longitude}`,
-                logImagePath: `${imgPath}`
+                logImage: imageBase64,
+                logTime: timestamp
             };
             const response = await axios.post("http://localhost:3001/violate", logData);
             console.log("Log added successfully:", response.data);

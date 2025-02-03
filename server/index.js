@@ -1,17 +1,26 @@
 const express = require('express');
 const moment = require('moment');
 const cors = require('cors');
+const path = require('path');
 const fs = require('fs');
 const app = express();
 
 const PORT = 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+
+const IMG_DIR = "./db/imgs/";
+const LOGS_FILE = "./db/HULECA-logs.json";
+
+if (!fs.existsSync(IMG_DIR)) fs.mkdirSync(IMG_DIR, { recursive: true });
+if (!fs.existsSync(LOGS_FILE)) fs.writeFileSync(LOGS_FILE, "[]", "utf8");
 
 app.get('/', (req, res) => {
   res.send("MOMEEEENT");
 });
+
+app.use('/imgs', express.static(IMG_DIR));
 
 app.get('/logs', (req, res) => {
   const filePath = "./db/HULECA-logs.json";
@@ -31,17 +40,18 @@ app.get('/logs', (req, res) => {
       const formattedLogs = logs.map((log, index) => {
         console.log(`Log ${index + 1}`);
         console.log(`  - logLocation : ${log.logLocation}`);
-        console.log(`  - logTime     : ${moment().format('MMMM Do YYYY, h:mm:ss a')}`);
+        console.log(`  - logTime     : ${moment().format('MMMM_Do_YYYY,_h:mm:ss_a')}`);
+        console.log(`  - logImage    : ${log.logImagePath}`);
         
-        // Return a new object with logTime added
         return {
           ...log,
-          logTime: moment().format('MMMM Do YYYY, h:mm:ss a')
+          logTime: moment().format('MMMM_Do_YYYY,_h:mm:ss_a')
         };
       });
       
       // Respond with the formatted logs
-      res.json(formattedLogs);
+      // res.json(formattedLogs);
+      res.json(logs);
     } catch (parseError) {
       console.error(`JSON Parse Error: ${parseError.message}`);
       res.status(500).json({
@@ -87,60 +97,65 @@ app.get('/numLog', (req, res) => {
 
 
 app.post('/violate', (req, res) => {
-  const filePath = "./db/HULECA-logs.json";
+  const { logLocation, logImage } = req.body;
 
-  // Destructure logLocation and logImagePath from the request body
-  const { logLocation, logImagePath } = req.body;
-
-  if (!logLocation || !logImagePath) {
+  if (!logLocation || !logImage) {
     return res.status(400).json({
-      error: "Both logLocation and logImagePath are required",
+      error: "logLocation and logImage are required"
     });
   }
 
-  // Create a new log entry
-  const newLog = {
-    logTime: moment().format('MMMM Do YYYY, h:mm:ss a'),
-    logLocation,
-    logImagePath,
-  };
+  const timestamp = moment().format('YYYYMMDD-HHmmss'); // Remove spaces to avoid filename issues
+  const imageFilename = `violation-${timestamp}.jpg`;
+  const imagePath = path.join(IMG_DIR, imageFilename);
 
-  // Read the existing logs
-  fs.readFile(filePath, 'utf8', (err, data) => {
+  // Remove Base64 header
+  const base64Data = logImage.replace(/^data:image\/jpeg;base64,/, "");
+
+  // ✅ **Write the image to the filesystem**
+  fs.writeFile(imagePath, base64Data, "base64", (err) => {
     if (err) {
-      console.error(`File Read Error: ${err.message}`);
-      return res.status(500).json({
-        error: "Failed to read the log file",
-      });
+      console.error("Error saving image:", err);
+      return res.status(500).json({ error: "Failed to save image" });
     }
 
-    try {
-      const logs = JSON.parse(data || "[]"); // Parse existing logs or initialize with an empty array
-      logs.push(newLog); // Add the new log
+    console.log(`✅ Image saved at: ${imagePath}`);
 
-      // Write the updated logs back to the file
-      fs.writeFile(filePath, JSON.stringify(logs, null, 2), 'utf8', (writeErr) => {
+      // Create log entry
+    const newLog = {
+      logTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
+      logLocation,
+      logImagePath: `/imgs/${imageFilename}` // Store relative path
+    };
+
+      // Read existing logs
+    fs.readFile(LOGS_FILE, "utf8", (readErr, data) => {
+      let logs = [];
+      if (!readErr && data) {
+        try {
+          logs = JSON.parse(data);
+        } catch (parseError) {
+          console.error("Error parsing logs JSON:", parseError.message);
+        }
+      }
+
+      logs.push(newLog);
+
+          // Write updated logs
+      fs.writeFile(LOGS_FILE, JSON.stringify(logs, null, 2), "utf8", (writeErr) => {
         if (writeErr) {
-          console.error(`File Write Error: ${writeErr.message}`);
-          return res.status(500).json({
-            error: "Failed to write to the log file",
-          });
+          console.error("Error writing to logs file:", writeErr);
+          return res.status(500).json({ error: "Failed to save log" });
         }
 
         res.status(201).json({
-          message: "Log added successfully",
-          log: newLog,
+          message: "Violation logged successfully",
+          log: newLog
         });
       });
-    } catch (parseError) {
-      console.error(`JSON Parse Error: ${parseError.message}`);
-      res.status(500).json({
-        error: "Failed to parse existing logs",
-      });
-    }
+    });
   });
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
