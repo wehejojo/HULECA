@@ -1,7 +1,7 @@
 [
   {
-    "logLocation": "",
-    "logTime": "",
-    "logImagePath": "./imgs/img1.jpg"
+    "logLocation": "Insert Location",
+    "logTime": "Insert Time",
+    "logImagePath": "Insert Image Path"
   }
 ]

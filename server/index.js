@@ -157,6 +157,6 @@ app.post('/violate', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port: ${PORT}`);
+app.listen(PORT, "0.0.0.0" || "localhost" ,() => {
+  console.log(`Listening to requests on http://${"192.168.100.6" || "localhost"}:${PORT}`);
 });
