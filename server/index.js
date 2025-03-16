@@ -5,6 +5,13 @@ const path = require('path');
 const fs = require('fs');
 const app = express();
 
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./firebase-service-account.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 const PORT = 3001;
 
 app.use(cors());
@@ -96,24 +103,21 @@ app.get('/numLog', (req, res) => {
 });
 
 
-app.post('/violate', (req, res) => {
-  const { logLocation, logImage } = req.body;
+app.post("/violate", (req, res) => {
+  const { logLocation, logImage, logTime, userToken } = req.body; // Expect userToken from request
 
-  if (!logLocation || !logImage) {
+  if (!logLocation || !logImage || !userToken) {
     return res.status(400).json({
-      error: "logLocation and logImage are required"
+      error: "logLocation, logImage, and userToken are required",
     });
   }
 
-  const timestamp = moment().format('YYYYMMDD-HHmmss'); // Remove spaces to avoid filename issues
+  const timestamp = moment().format("YYYYMMDD-HHmmss");
   const imageFilename = `violation-${timestamp}.jpg`;
   const imagePath = path.join(IMG_DIR, imageFilename);
-
-  // Remove Base64 header
   const base64Data = logImage.replace(/^data:image\/jpeg;base64,/, "");
 
-  // ✅ **Write the image to the filesystem**
-  fs.writeFile(imagePath, base64Data, "base64", (err) => {
+  fs.writeFile(imagePath, base64Data, "base64", async (err) => {
     if (err) {
       console.error("Error saving image:", err);
       return res.status(500).json({ error: "Failed to save image" });
@@ -121,14 +125,12 @@ app.post('/violate', (req, res) => {
 
     console.log(`✅ Image saved at: ${imagePath}`);
 
-      // Create log entry
     const newLog = {
       logTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
       logLocation,
-      logImagePath: `/imgs/${imageFilename}` // Store relative path
+      logImagePath: `/imgs/${imageFilename}`,
     };
 
-      // Read existing logs
     fs.readFile(LOGS_FILE, "utf8", (readErr, data) => {
       let logs = [];
       if (!readErr && data) {
@@ -141,16 +143,35 @@ app.post('/violate', (req, res) => {
 
       logs.push(newLog);
 
-          // Write updated logs
-      fs.writeFile(LOGS_FILE, JSON.stringify(logs, null, 2), "utf8", (writeErr) => {
+      fs.writeFile(LOGS_FILE, JSON.stringify(logs, null, 2), "utf8", async (writeErr) => {
         if (writeErr) {
           console.error("Error writing to logs file:", writeErr);
           return res.status(500).json({ error: "Failed to save log" });
         }
 
+        // Send Push Notification
+        const message = {
+          token: userToken, // User's FCM token
+          notification: {
+            title: "Violation Logged",
+            body: `New violation at ${logLocation}`,
+          },
+          data: {
+            logLocation,
+            logImagePath: `/imgs/${imageFilename}`,
+          },
+        };
+
+        try {
+          await admin.messaging().send(message);
+          console.log("✅ Notification sent!");
+        } catch (error) {
+          console.error("❌ Error sending notification:", error);
+        }
+
         res.status(201).json({
           message: "Violation logged successfully",
-          log: newLog
+          log: newLog,
         });
       });
     });
