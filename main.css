@@ -45,7 +45,6 @@ canvas {
 }
 
 body:after {
-    content: "";
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -69,5 +68,5 @@ body:after {
 }
 
 #fps:after {
-    content: " fps";
+    content: "";
 }

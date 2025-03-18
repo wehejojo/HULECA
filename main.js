@@ -167,8 +167,8 @@ $(function () {
         if (cigaretteDetected && !isAlertTriggered){
             isAlertTriggered = true;
             alertTimeout = setTimeout(() => {
-                alert("Cigarette Detected! Enforcers have been informed");
                 logViolation();
+                alert("Cigarette Detected! Enforcers have been informed");
                 fetchLogs();
                 isAlertTriggered = false;
             }, 3000);
@@ -230,7 +230,8 @@ $(function () {
             const logData = {
                 logLocation: `${currentLocation.latitude}, ${currentLocation.longitude}`,
                 logImage: imageBase64,
-                logTime: timestamp
+                logTime: timestamp,
+                userToken: "cZpbxRfmSt65SYDfe5S4Va:APA91bFmmFfk6NVq6wsFo9PuuvpcmA1Tkdx-7wFd5hb79Pu0f0fGa2r-D-X-JhEiCat3C0o-S62AtmAjyO7S8eyPGPQJfgbeMWY_rFGu_qPT5rUpvDam3WI"
             };
             const response = await axios.post("http://localhost:3001/violate", logData);
             console.log("Log added successfully:", response.data);
@@ -261,7 +262,8 @@ $(function () {
                     });
 
                     var fps = pastFrameTimes.length / total;
-                    $("#fps").text(Math.round(fps));
+                    // Math.round(fps)
+                    $("#fps").text("HULECa");
                 }
                 prevTime = Date.now();
             })
