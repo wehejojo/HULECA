@@ -25,6 +25,15 @@ if (!fs.existsSync(LOGS_FILE)) fs.writeFileSync(LOGS_FILE, "[]", "utf8");
 
 app.get('/', (req, res) => {
   res.send("MOMEEEENT");
+
+  // setInterval(() => {
+  //   const memoryUsage = process.memoryUsage();
+  //   console.log(`Memory Usage:
+  //   RSS: ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB
+  //   Heap Total: ${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB
+  //   Heap Used: ${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB
+  //   External: ${(memoryUsage.external / 1024 / 1024).toFixed(2)} MB`);
+  // }, 5000);
 });
 
 app.use('/imgs', express.static(IMG_DIR));
@@ -47,18 +56,16 @@ app.get('/logs', (req, res) => {
       const formattedLogs = logs.map((log, index) => {
         console.log(`Log ${index + 1}`);
         console.log(`  - logLocation : ${log.logLocation}`);
-        console.log(`  - logTime     : ${moment().format('MMMM_Do_YYYY,_h:mm:ss_a')}`);
+        console.log(`  - logTime     : ${moment().format('MM/DD/YYYY - h:mma')}`);
         console.log(`  - logImage    : ${log.logImagePath}`);
         
         return {
           ...log,
-          logTime: moment().format('MMMM_Do_YYYY,_h:mm:ss_a')
+          logTime: moment().format('MM/DD/YYYY - h:mm a')
         };
       });
       
-      // Respond with the formatted logs
-      // res.json(formattedLogs);
-      res.json(logs);
+      res.json(formattedLogs);
     } catch (parseError) {
       console.error(`JSON Parse Error: ${parseError.message}`);
       res.status(500).json({
