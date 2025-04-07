@@ -51,17 +51,17 @@ app.get('/logs', (req, res) => {
     
     try {
       const logs = JSON.parse(data);
-      
-      // Add logTime to each log
+
       const formattedLogs = logs.map((log, index) => {
         console.log(`Log ${index + 1}`);
+        console.log(`  - logID       : ${log.logID}`);
         console.log(`  - logLocation : ${log.logLocation}`);
-        console.log(`  - logTime     : ${moment().format('MM/DD/YYYY - h:mma')}`);
+        console.log(`  - logTime     : ${log.logTime}`);
         console.log(`  - logImage    : ${log.logImagePath}`);
         
         return {
           ...log,
-          logTime: moment().format('MM/DD/YYYY - h:mm a')
+          // logTime: moment().format('MM/DD/YYYY - h:mm a')
         };
       });
       
@@ -75,47 +75,15 @@ app.get('/logs', (req, res) => {
   });
 });
 
-app.get('/numLog', (req, res) => {
-  const filePath = "./db/HULECA-logs.json";
-  
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error(`File Read Error: ${err.message}`);
-      return res.status(500).json({
-        error: "Failed to read the file",
-      });
-    }
-
-    try {
-      // Parse the JSON data
-      const logs = JSON.parse(data);
-
-      // Make sure the data is an array before getting the length
-      if (Array.isArray(logs)) {
-        // Return the length of the array (number of logs)
-        res.json({ numLogs: logs.length });
-      } else {
-        res.status(500).json({
-          error: "The JSON data is not an array",
-        });
-      }
-
-    } catch (parseError) {
-      console.error(`JSON Parse Error: ${parseError.message}`);
-      res.status(500).json({
-        error: "Failed to parse JSON",
-      });
-    }
-  });
-});
-
 
 app.post("/violate", (req, res) => {
-  const { logLocation, logImage, logTime, userToken } = req.body; // Expect userToken from request
+  const { logLocation, logImage, logTime } = req.body;
+  // const { logLocation, logImage, logTime, userToken } = req.body;
 
-  if (!logLocation || !logImage || !userToken) {
+  // if (!logLocation || !logImage || !userToken)
+  if (!logLocation || !logImage ) {
     return res.status(400).json({
-      error: "logLocation, logImage, and userToken are required",
+      error: "logLocation, logImage are required",
     });
   }
 
@@ -132,21 +100,27 @@ app.post("/violate", (req, res) => {
 
     console.log(`✅ Image saved at: ${imagePath}`);
 
-    const newLog = {
-      logTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
-      logLocation,
-      logImagePath: `/imgs/${imageFilename}`,
-    };
-
     fs.readFile(LOGS_FILE, "utf8", (readErr, data) => {
       let logs = [];
+      let nextLogID = 1;
       if (!readErr && data) {
         try {
           logs = JSON.parse(data);
+          if (logs.length > 0) {
+            const lastID = logs[logs.length - 1].logID || 0;
+            nextLogID = lastID + 1;
+          }
         } catch (parseError) {
           console.error("Error parsing logs JSON:", parseError.message);
         }
       }
+
+      const newLog = {
+        logID: nextLogID,
+        logTime: moment().format('MM/DD/YYYY - h:mm a'),
+        logLocation,
+        logImagePath: `/imgs/${imageFilename}`,
+      };
 
       logs.push(newLog);
 
@@ -157,24 +131,24 @@ app.post("/violate", (req, res) => {
         }
 
         // Send Push Notification
-        const message = {
-          token: userToken, // User's FCM token
-          notification: {
-            title: "Violation Logged",
-            body: `New violation at ${logLocation}`,
-          },
-          data: {
-            logLocation,
-            logImagePath: `/imgs/${imageFilename}`,
-          },
-        };
+        // const message = {
+        //   token: userToken, // User's FCM token
+        //   notification: {
+        //     title: "Violation Logged",
+        //     body: `New violation at ${logLocation}`,
+        //   },
+        //   data: {
+        //     logLocation,
+        //     logImagePath: `/imgs/${imageFilename}`,
+        //   },
+        // };
 
-        try {
-          await admin.messaging().send(message);
-          console.log("✅ Notification sent!");
-        } catch (error) {
-          console.error("❌ Error sending notification:", error);
-        }
+        // try {
+        //   await admin.messaging().send(message);
+        //   console.log("✅ Notification sent!");
+        // } catch (error) {
+        //   console.error("❌ Error sending notification:", error);
+        // }
 
         res.status(201).json({
           message: "Violation logged successfully",
@@ -182,6 +156,37 @@ app.post("/violate", (req, res) => {
         });
       });
     });
+  });
+});
+
+app.get('/numLog', (req, res) => {
+  const filePath = "./db/HULECA-logs.json";
+  
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error(`File Read Error: ${err.message}`);
+      return res.status(500).json({
+        error: "Failed to read the file",
+      });
+    }
+
+    try {
+      const logs = JSON.parse(data);
+
+      if (Array.isArray(logs)) {
+        res.json({ numLogs: logs.length });
+      } else {
+        res.status(500).json({
+          error: "The JSON data is not an array",
+        });
+      }
+
+    } catch (parseError) {
+      console.error(`JSON Parse Error: ${parseError.message}`);
+      res.status(500).json({
+        error: "Failed to parse JSON",
+      });
+    }
   });
 });
 
