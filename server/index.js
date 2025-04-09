@@ -36,7 +36,8 @@ app.get('/', (req, res) => {
   // }, 5000);
 });
 
-app.use('/imgs', express.static(IMG_DIR));
+// app.use('/imgs', express.static(IMG_DIR));
+app.use('/imgs', express.static(path.join(__dirname, 'db/imgs')));
 
 app.get('/logs', (req, res) => {
   const filePath = "./db/HULECA-logs.json";
