@@ -16,5 +16,23 @@
     "logTime": "04/10/2025 - 9:32 pm",
     "logLocation": "16.4233216, 120.5960704",
     "logImagePath": "/imgs/violation-20250410-213227.jpg"
+  },
+  {
+    "logID": 4,
+    "logTime": "04/11/2025 - 6:40 am",
+    "logLocation": "16.4265984, 120.5960704",
+    "logImagePath": "/imgs/violation-20250411-064058.jpg"
+  },
+  {
+    "logID": 5,
+    "logTime": "04/11/2025 - 6:41 am",
+    "logLocation": "16.4265984, 120.5960704",
+    "logImagePath": "/imgs/violation-20250411-064122.jpg"
+  },
+  {
+    "logID": 6,
+    "logTime": "04/11/2025 - 6:41 am",
+    "logLocation": "16.4265984, 120.5960704",
+    "logImagePath": "/imgs/violation-20250411-064136.jpg"
   }
 ]
