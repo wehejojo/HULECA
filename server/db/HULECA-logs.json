@@ -10,5 +10,11 @@
     "logTime": "04/10/2025 - 6:50 am",
     "logLocation": "16.4233216, 120.5960704",
     "logImagePath": "/imgs/violation-20250410-065000.jpg"
+  },
+  {
+    "logID": 3,
+    "logTime": "04/10/2025 - 9:32 pm",
+    "logLocation": "16.4233216, 120.5960704",
+    "logImagePath": "/imgs/violation-20250410-213227.jpg"
   }
 ]
