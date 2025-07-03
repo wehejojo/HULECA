@@ -34,5 +34,29 @@
     "logTime": "04/11/2025 - 6:41 am",
     "logLocation": "16.4265984, 120.5960704",
     "logImagePath": "/imgs/violation-20250411-064136.jpg"
+  },
+  {
+    "logID": 7,
+    "logTime": "04/14/2025 - 12:23 pm",
+    "logLocation": "16.408447914473683, 120.59782824736841",
+    "logImagePath": "/imgs/violation-20250414-091924.jpg"
+  },
+  {
+    "logID": 8,
+    "logTime": "05/07/2025 - 3:25 pm",
+    "logLocation": "16.4107964, 120.5920006",
+    "logImagePath": "/imgs/violation-20250507-152521.jpg"
+  },
+  {
+    "logID": 9,
+    "logTime": "05/07/2025 - 3:27 pm",
+    "logLocation": "16.4107964, 120.5920006",
+    "logImagePath": "/imgs/violation-20250507-152714.jpg"
+  },
+  {
+    "logID": 10,
+    "logTime": "05/07/2025 - 3:31 pm",
+    "logLocation": "16.4107799, 120.5919518",
+    "logImagePath": "/imgs/violation-20250507-153128.jpg"
   }
 ]
