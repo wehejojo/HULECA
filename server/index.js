@@ -1,53 +1,27 @@
 require('dotenv').config();
 const express = require('express');
 const moment = require('moment');
-const https = require('https');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
-const webpush = require('web-push');
-
-
-webpush.setVapidDetails(
-  'mailto:jojoliwag4@gmail.com',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
-
 const app = express();
 const PORT = 3001;
-
-const options = {
-  key: fs.readFileSync(path.join(__dirname, 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, 'cert.pem'))
-};
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
 const IMG_DIR = "./db/imgs/";
 const LOGS_FILE = "./db/HULECA-logs.json";
-const SUBS_FILE = "./db/subscriptions.json";
 
-if (!fs.existsSync(SUBS_FILE)) fs.writeFileSync(SUBS_FILE, "[]", "utf8");
 if (!fs.existsSync(IMG_DIR)) fs.mkdirSync(IMG_DIR, { recursive: true });
 if (!fs.existsSync(LOGS_FILE)) fs.writeFileSync(LOGS_FILE, "[]", "utf8");
 
 app.get('/', (req, res) => {
   res.send("MOMEEEENT");
-
-  // setInterval(() => {
-  //   const memoryUsage = process.memoryUsage();
-  //   console.log(`Memory Usage:
-  //   RSS: ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB
-  //   Heap Total: ${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB
-  //   Heap Used: ${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB
-  //   External: ${(memoryUsage.external / 1024 / 1024).toFixed(2)} MB`);
-  // }, 5000);
 });
 
-// app.use('/imgs', express.static(IMG_DIR));
+
 app.use('/imgs', express.static(path.join(__dirname, 'db/imgs')));
 
 app.get('/logs', (req, res) => {
@@ -65,15 +39,8 @@ app.get('/logs', (req, res) => {
       const logs = JSON.parse(data);
 
       const formattedLogs = logs.map((log, index) => {
-        // console.log(`Log ${index + 1}`);
-        // console.log(`  - logID       : ${log.logID}`);
-        // console.log(`  - logLocation : ${log.logLocation}`);
-        // console.log(`  - logTime     : ${log.logTime}`);
-        // console.log(`  - logImage    : ${log.logImagePath}`);
-        
         return {
           ...log,
-          // logTime: moment().format('MM/DD/YYYY - h:mm a')
         };
       });
       
@@ -90,9 +57,7 @@ app.get('/logs', (req, res) => {
 
 app.post("/violate", (req, res) => {
   const { logLocation, logImage, logTime } = req.body;
-  // const { logLocation, logImage, logTime, userToken } = req.body;
 
-  // if (!logLocation || !logImage || !userToken)
   if (!logLocation || !logImage ) {
     return res.status(400).json({
       error: "logLocation, logImage are required",
@@ -141,28 +106,7 @@ app.post("/violate", (req, res) => {
           console.error("Error writing to logs file:", writeErr);
           return res.status(500).json({ error: "Failed to save log" });
         }
-
-        let subscriptions = [];
-        try {
-          subscriptions = JSON.parse(fs.readFileSync(SUBS_FILE, "utf8"));
-        } catch (err) {
-          console.error("Failed to read subscriptions:", err.message);
-        }
-
-        const payload = {
-          title: "🚨 Violation Detected",
-          body: `New violation at ${logLocation} (${newLog.logTime})`
-        };        
-      
-        subscriptions.forEach(async (sub, i) => {
-          try {
-            // Send the payload as a plain object, not a stringified one
-            await webpush.sendNotification(sub, JSON.stringify(payload)); // Make sure to JSON.stringify the payload
-            console.log(`🔔 Notification sent to subscriber ${i + 1}`);
-          } catch (err) {
-            console.error(`❌ Failed to notify subscriber ${i + 1}:`, err.message);
-          }
-        });        
+        
 
         res.status(201).json({
           message: "Violation logged successfully",
@@ -204,38 +148,6 @@ app.get('/numLog', (req, res) => {
   });
 });
 
-app.get('/api/vapid-public-key', (req, res) => {
-  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
-});
-
-app.post('/api/save-subscription', (req, res) => {
-  const subscription = req.body;
-
-  if (!subscription || !subscription.endpoint) {
-    return res.status(400).json({ error: 'Invalid subscription' });
-  }
-
-  let subscriptions = [];
-  try {
-    subscriptions = JSON.parse(fs.readFileSync(SUBS_FILE, 'utf8'));
-  } catch (e) {
-    console.error("Failed to read subscriptions:", e.message);
-  }
-
-  // Prevent duplicates
-  const alreadyExists = subscriptions.some(sub => sub.endpoint === subscription.endpoint);
-  if (!alreadyExists) {
-    subscriptions.push(subscription);
-    fs.writeFileSync(SUBS_FILE, JSON.stringify(subscriptions, null, 2));
-  }
-
-  res.status(201).json({ message: 'Subscription saved' });
-});
-
 app.listen(PORT, "0.0.0.0" || "localhost" ,() => {
   console.log(`Listening to requests on http://${"192.168.100.6" || "localhost"}:${PORT}`);
 });
-
-// https.createServer(options, app).listen(PORT, () => {
-//   console.log(`HTTPS Server running on https://localhost:${PORT}`);
-// });
