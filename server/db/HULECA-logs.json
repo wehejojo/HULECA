@@ -58,5 +58,17 @@
     "logTime": "05/07/2025 - 3:31 pm",
     "logLocation": "16.4107799, 120.5919518",
     "logImagePath": "/imgs/violation-20250507-153128.jpg"
+  },
+  {
+    "logID": 11,
+    "logTime": "08/06/2025 - 3:37 pm",
+    "logLocation": "16.4086545, 120.5976344",
+    "logImagePath": "/imgs/violation-20250806-153736.jpg"
+  },
+  {
+    "logID": 12,
+    "logTime": "08/11/2025 - 3:45 pm",
+    "logLocation": "16.4082361, 120.5980085",
+    "logImagePath": "/imgs/violation-20250811-154533.jpg"
   }
 ]
